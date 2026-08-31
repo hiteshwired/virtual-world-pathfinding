@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries>
+  <library name="lib">
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/junit-platform-engine-1.7.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/junit-platform-commons-1.7.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/opentest4j-1.2.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/processing-experimental.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/apiguardian-api-1.1.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/junit-jupiter-params-5.7.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/junit-jupiter-5.7.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/junit-jupiter-api-5.7.0.jar" />
+    <archive path="C:/Users/hites/Documents/Freshman Year/PBOOPD/Project2Forestv2/lib/junit-jupiter-engine-5.7.0.jar" />
+  </library>
+</eclipse-userlibraries>
+
