@@ -1,100 +1,99 @@
-# Forest Simulation & Virtual World
+# Virtual World — Forest Simulation with A* Pathfinding
 
-An interactive 2D grid-based ecosystem simulation and game engine implemented in Java using the Processing library. The simulation models autonomous agents, natural resources, lifecycles, and environmental dynamics on a tile grid, powered by an event-driven scheduler and intelligent pathfinding strategies.
+A 2D grid world in Java where autonomous entities go about their business: gatherers
+harvest wood and carry it to houses, fairies revive dead stumps into trees, saplings
+grow, and you can drop a meteor on the whole thing with a mouse click. Rendering is
+done with Processing.
 
----
+I built this to get comfortable with object-oriented design on a codebase big enough
+that bad decisions actually hurt. The two things I care about in it are the entity
+hierarchy and the A* implementation.
 
-## Overview
+## What happens in the world
 
-In this virtual world, autonomous entities interact with the environment according to customized behaviors and rules:
-- **Dudes (`DudeFull`, `DudeNotFull`, `DudeScared`):** Resource gatherers that navigate the world to harvest wood from Trees and Saplings, deposit resources at Houses, and respond dynamically to environmental hazards.
-- **Fairies:** Forest caretakers that roam the grid seeking Stumps to revitalize them into living Trees.
-- **Flora (`Tree`, `Sapling`, `Stump`):** Plant life that grows, undergoes lifecycle transitions, provides resources, or transforms upon depletion.
-- **Caterpillars & Obstacles:** Secondary creatures and terrain features that populate the landscape.
-- **Interactive Meteor Impact:** Real-time mouse interactions allow the user to trigger meteor strikes, creating rock craters, altering terrain, and frightening nearby entities.
+Entities are scheduled rather than updated in a loop. Each one registers activities
+and animations with an `EventScheduler` at its own rate, so a fast-moving fairy and a
+slow-growing sapling coexist without a global tick.
 
----
+- **Dudes** gather wood from trees and saplings, carry it to a house, and switch
+  behavior when full (`DudeNotFull` → `DudeFull`). A meteor nearby turns them into
+  `DudeScared`, which runs away instead of working.
+- **Fairies** look for stumps and turn them back into saplings, which then grow into
+  trees. The forest can recover from being clear-cut.
+- **Trees, saplings, and stumps** have their own lifecycles — trees get trampled down
+  to stumps, saplings mature or get destroyed.
+- **Caterpillars and obstacles** move around and block paths.
+- **Left-clicking** drops a meteor: it replaces terrain with rock and frightens any
+  dudes in range.
 
-## Architecture & OOP Design Patterns
+## Design
 
-The project emphasizes object-oriented principles, modularity, and clean separation of concerns:
+`Entity` is the abstract base holding position and sprite animation state. Above it,
+`Actionable` adds scheduled behavior and `Resourceable` adds health and resource
+tracking. Movement and state changes are interfaces (`Moveable`, `Transformeable`)
+rather than inheritance, because a fairy and a dude both move but share almost nothing
+else.
 
-### 1. Entity Hierarchy & Interfaces
-- **`Entity`**: Base abstract class managing entity identity, position coordinates, and sprite animations.
-- **`Actionable`**: Extends `Entity` to support scheduled recurring activities via the `EventScheduler`.
-- **`Resourceable`**: Extends `Actionable` to incorporate health and resource tracking for plants and gatherers.
-- **`Moveable`**: Interface defining movement and destination-targeting contracts across entities (`Dude`, `Fairy`, `Caterpillar`).
-- **`Transformeable`**: Interface defining state transitions (e.g., `DudeNotFull` transforming to `DudeFull` upon reaching capacity, or `Sapling` growing into a `Tree`).
+Pathfinding sits behind a `PathingStrategy` interface with two implementations:
 
-### 2. Strategy Pattern for Pathfinding
-Pathfinding algorithms are decoupled from entity logic using the `PathingStrategy` interface:
-- **`AstarPathingStrategy`**: Implements the A* search algorithm using Manhattan distance heuristics and an optimized priority queue open set / closed set to find the shortest obstacle-free path.
-- **`SingleStepPathingStrategy`**: A simplified greedy single-step movement strategy used for baseline movement and regression verification.
+- **`AstarPathingStrategy`** — A* using a Manhattan-distance heuristic, a
+  `PriorityQueue` ordered on f = g + h for the open set, a `HashSet` closed set, and a
+  map of best known g-costs so a node is only re-queued when a cheaper route to it
+  turns up. Neighbors arrive as a `Stream<Point>` filtered by a passability predicate,
+  and the caller supplies its own "close enough" test, so the same search works for
+  entities that need to reach a tile versus stand next to one.
+- **`SingleStepPathingStrategy`** — a greedy one-step move. It's the baseline I
+  compared against, and it gets stuck on concave obstacles the way you'd expect.
 
-### 3. Event-Driven Scheduling
-- **`EventScheduler`**: Priority-queue-based event loop tracking simulation timestamps.
-- **`Activity` & `Animation`**: Discrete scheduled actions that trigger behavioral updates and frame animations at independent rates.
+### A note on the repository name
 
----
+The name says Dijkstra, but there is no Dijkstra implementation here — only A* and the
+greedy single-step strategy above. A* with a zero heuristic would be the equivalent,
+and I never wrote that variant. The name is a leftover and it overstates what the code
+does.
 
-## Project Structure
+## Running it
 
-```text
-├── images/                  # Sprite assets for entities and terrain tiles
-├── lib/                     # Library dependencies (Processing, JUnit 5)
-├── src/                     # Java source code
-│   ├── AstarPathingStrategy.java     # A* graph search implementation
-│   ├── SingleStepPathingStrategy.java# Single-step greedy pathing
-│   ├── PathingStrategy.java          # Strategy interface for pathfinding
-│   ├── Dude.java                     # Abstract base class for Dude gatherers
-│   ├── DudeFull.java                 # Full inventory state
-│   ├── DudeNotFull.java              # Gathering state
-│   ├── DudeScared.java               # Frightened state from meteor strikes
-│   ├── Fairy.java                    # Fairy entity logic
-│   ├── Caterpillar.java              # Caterpillar entity logic
-│   ├── Tree.java / Sapling.java      # Plant lifecycle entities
-│   ├── Stump.java / Rock.java        # Static / obstacle entities
-│   ├── House.java / Obstacle.java    # Environmental structures
-│   ├── EventScheduler.java           # Simulation clock & queue
-│   ├── WorldModel.java               # Spatial grid model & entity management
-│   ├── WorldView.java                # Viewport rendering & camera
-│   ├── VirtualWorld.java             # Main Processing application entrypoint
-│   └── WorldTests.java               # JUnit test suite
-├── imagelist                # Mapping of entity keys to sprite image files
-├── world.sav                # Default world save configuration
-└── README.md                # Project documentation
+Requires a JDK. The IntelliJ project is configured for JDK 23 (`.idea/misc.xml`);
+anything recent should compile, though I've only run it on 23. Every dependency is
+vendored in `lib/`, including the Processing core, so there's nothing to download.
+
+Open the project in IntelliJ, confirm the SDK under **Project Structure → Project**,
+then run `src/VirtualWorld.java`.
+
+- **Arrow keys** pan the viewport
+- **Left click** drops a meteor
+
+The starting world is read from `world.sav`, and `imagelist` maps entity keys to the
+sprites in `images/`. Editing `world.sav` is the quickest way to set up a specific
+scenario.
+
+## Tests
+
+`src/WorldTests.java` holds 20 JUnit 5 tests covering save-file parsing, grid bounds,
+entity placement, the trample and lifecycle transitions, dude carry limits, and both
+pathfinding strategies. They run headlessly through `VirtualWorld.headlessMain`, which
+steps the scheduler a fixed number of ticks and returns entity positions as strings —
+so no display is needed and results are deterministic.
+
+Run them from IntelliJ (right-click `WorldTests` → Run). The JUnit 5 jars in `lib/`
+are the API and engine only; the standalone console launcher isn't vendored, so
+there's no working command-line invocation without adding
+`junit-platform-console-standalone` yourself.
+
+## Layout
+
+```
+src/          Java sources — entities, world model, view, pathfinding, tests
+images/       Sprite assets
+lib/          Vendored jars (Processing core, JUnit 5)
+imagelist     Entity key → sprite file mapping
+world.sav     Default starting world
 ```
 
----
+## Limitations
 
-## Getting Started
-
-### Prerequisites
-- **Java Development Kit (JDK):** Version 17 or higher (tested with OpenJDK 23).
-- **IDE:** IntelliJ IDEA (recommended) or any standard Java IDE / CLI build tools.
-
-### Running the Virtual World
-You can launch the graphical simulation by running `VirtualWorld`:
-
-#### From IntelliJ IDEA:
-1. Open the project directory in IntelliJ IDEA.
-2. Ensure the JDK is configured in **Project Structure > Project Settings > Project SDK**.
-3. Run `src/VirtualWorld.java`.
-
-#### Controls:
-- **Arrow Keys (Up / Down / Left / Right):** Pan the camera viewport across the world.
-- **Left Mouse Click:** Trigger a meteor strike at the target tile, spawning craters and frightening nearby Dudes.
-
----
-
-## Running Automated Tests
-
-The test suite validates entity parsing, lifecycle transitions, trampling mechanics, event scheduling, and pathfinding accuracy.
-
-You can run `WorldTests` directly in IntelliJ IDEA or via JUnit 5 runner:
-```bash
-# Example running test suite via command line (Windows PowerShell)
-java -classpath "out/production/Project2Forestv2;lib/*" org.junit.platform.console.ConsoleLauncher --scan-class-path
-```
-
-All unit tests in `WorldTests.java` are verified and passing.
+The sprite and world-file formats are positional and unforgiving — a malformed line in
+`world.sav` fails in ways that aren't always obvious. There's no packaging or build
+file; it's an IntelliJ project with jars on the classpath, which is how it was written
+and not how I'd set it up now.
