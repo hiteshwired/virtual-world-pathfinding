@@ -1,4 +1,4 @@
-# Virtual World — Forest Simulation with A* Pathfinding
+# Virtual World: Forest Simulation with A* Pathfinding
 
 A 2D grid world in Java where autonomous entities go about their business: gatherers
 harvest wood and carry it to houses, fairies revive dead stumps into trees, saplings
@@ -20,7 +20,7 @@ slow-growing sapling coexist without a global tick.
   `DudeScared`, which runs away instead of working.
 - **Fairies** look for stumps and turn them back into saplings, which then grow into
   trees. The forest can recover from being clear-cut.
-- **Trees, saplings, and stumps** have their own lifecycles — trees get trampled down
+- **Trees, saplings, and stumps** have their own lifecycles; trees get trampled down
   to stumps, saplings mature or get destroyed.
 - **Caterpillars and obstacles** move around and block paths.
 - **Left-clicking** drops a meteor: it replaces terrain with rock and frightens any
@@ -36,21 +36,14 @@ else.
 
 Pathfinding sits behind a `PathingStrategy` interface with two implementations:
 
-- **`AstarPathingStrategy`** — A* using a Manhattan-distance heuristic, a
+- **`AstarPathingStrategy`**: A* using a Manhattan-distance heuristic, a
   `PriorityQueue` ordered on f = g + h for the open set, a `HashSet` closed set, and a
   map of best known g-costs so a node is only re-queued when a cheaper route to it
   turns up. Neighbors arrive as a `Stream<Point>` filtered by a passability predicate,
   and the caller supplies its own "close enough" test, so the same search works for
   entities that need to reach a tile versus stand next to one.
-- **`SingleStepPathingStrategy`** — a greedy one-step move. It's the baseline I
+- **`SingleStepPathingStrategy`**: a greedy one-step move. It's the baseline I
   compared against, and it gets stuck on concave obstacles the way you'd expect.
-
-### A note on the repository name
-
-The name says Dijkstra, but there is no Dijkstra implementation here — only A* and the
-greedy single-step strategy above. A* with a zero heuristic would be the equivalent,
-and I never wrote that variant. The name is a leftover and it overstates what the code
-does.
 
 ## Running it
 
@@ -73,7 +66,7 @@ scenario.
 `src/WorldTests.java` holds 20 JUnit 5 tests covering save-file parsing, grid bounds,
 entity placement, the trample and lifecycle transitions, dude carry limits, and both
 pathfinding strategies. They run headlessly through `VirtualWorld.headlessMain`, which
-steps the scheduler a fixed number of ticks and returns entity positions as strings —
+steps the scheduler a fixed number of ticks and returns entity positions as strings,
 so no display is needed and results are deterministic.
 
 Run them from IntelliJ (right-click `WorldTests` → Run). The JUnit 5 jars in `lib/`
@@ -84,7 +77,7 @@ there's no working command-line invocation without adding
 ## Layout
 
 ```
-src/          Java sources — entities, world model, view, pathfinding, tests
+src/          Java sources: entities, world model, view, pathfinding, tests
 images/       Sprite assets
 lib/          Vendored jars (Processing core, JUnit 5)
 imagelist     Entity key → sprite file mapping
@@ -93,7 +86,7 @@ world.sav     Default starting world
 
 ## Limitations
 
-The sprite and world-file formats are positional and unforgiving — a malformed line in
+The sprite and world-file formats are positional and unforgiving; a malformed line in
 `world.sav` fails in ways that aren't always obvious. There's no packaging or build
 file; it's an IntelliJ project with jars on the classpath, which is how it was written
 and not how I'd set it up now.
